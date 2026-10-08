@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rani Cake Nepalgunj | रानी केक नेपालगञ्ज</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:Georgia,serif;background:#fff7f9;color:#4a2c2a}
+  header{background:#e75480;color:#fff;padding:14px 5%;display:flex;justify-content:space-between;align-items:center}
+  header h1{font-size:1.6rem}
+  header a{color:#fff;text-decoration:none;margin-left:18px;font-family:Arial,sans-serif}
+  .hero{text-align:center;padding:70px 20px;background:linear-gradient(135deg,#ffd6e0,#fff0f5)}
+  .hero h2{font-size:2.6rem;color:#c2185b}
+  .hero p{margin:14px 0 24px;font-size:1.15rem}
+  .btn{background:#e75480;color:#fff;border:none;padding:12px 28px;border-radius:30px;font-size:1rem;cursor:pointer;text-decoration:none;display:inline-block}
+  .btn:hover{background:#c2185b}
+  section{padding:50px 5%;max-width:1100px;margin:auto}
+  section h3{text-align:center;font-size:2rem;margin-bottom:28px;color:#c2185b}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:22px}
+  .card{background:#fff;border-radius:16px;padding:24px;text-align:center;box-shadow:0 4px 14px rgba(0,0,0,.08)}
+  .card .emoji{font-size:3.6rem}
+  .card h4{margin:10px 0 6px}
+  .card p{font-size:.95rem;color:#7a5a58;min-height:44px}
+  .price{font-weight:bold;color:#e75480;margin:10px 0;font-size:1.2rem}
+  form{background:#fff;padding:28px;border-radius:16px;box-shadow:0 4px 14px rgba(0,0,0,.08);max-width:520px;margin:auto;display:flex;flex-direction:column;gap:14px}
+  input,select,textarea{padding:11px;border:1px solid #e5b9c6;border-radius:8px;font-size:1rem;font-family:inherit}
+  #msg{text-align:center;margin-top:14px;font-weight:bold}
+  footer{background:#4a2c2a;color:#fff;text-align:center;padding:22px}
+</style>
+</head>
+<body>
+<header>
+  <h1>🎂 Rani Cake <small style="font-size:.7rem;display:block;font-weight:normal">रानी केक · नेपालगञ्ज</small></h1>
+  <nav><a href="#menu">मेनु Menu</a><a href="#order">अर्डर Order</a><a href="orders.html">Orders</a></nav>
+</header>
+
+<div class="hero">
+  <h2>ताजा बेक गरिएको, मायाले बनाइएको<br><span style="font-size:1.5rem">Freshly Baked in Nepalgunj</span></h2>
+  <p>जन्मदिन, वार्षिकोत्सव वा कुनै पनि खुसीको अवसरमा नेपालगञ्जमा सबैभन्दा मिठो केक।<br>Birthday, anniversary or any celebration – baked fresh in Nepalgunj, Banke.</p>
+  <a class="btn" href="#order">Order Now</a>
+</div>
+
+<section id="menu">
+  <h3>हाम्रा केकहरू · Our Cakes <small style="display:block;font-size:.9rem;color:#7a5a58">मूल्य १ पाउन्डको (Price per 1 lb) – रु NPR</small></h3>
+  <div class="grid" id="cakes">Loading cakes...</div>
+</section>
+
+<section id="order">
+  <h3>अर्डर गर्नुहोस् · Place Your Order</h3>
+  <form id="orderForm">
+    <input id="name" placeholder="तपाईंको नाम / Your name" required>
+    <input id="phone" placeholder="फोन नम्बर / Phone (98XXXXXXXX)" required>
+    <select id="cake" required></select>
+    <input id="qty" type="number" min="1" value="1" required>
+    <textarea id="message" rows="3" placeholder="केकमा लेख्ने सन्देश / Message on cake"></textarea>
+    <button class="btn" type="submit">अर्डर पक्का गर्नुहोस् · Confirm Order</button>
+  </form>
+  <p id="msg"></p>
+</section>
+
+<footer>© Rani Cake, नेपालगञ्ज, बाँके, लुम्बिनी प्रदेश, नेपाल<br>📞 फोन / WhatsApp: 98XXXXXXXX · Made with Docker 🐳</footer>
+
+<script>
+async function loadCakes(){
+  const res = await fetch('/api/cakes');
+  const cakes = await res.json();
+  document.getElementById('cakes').innerHTML = cakes.map(c => `
+    <div class="card">
+      <div class="emoji">${c.emoji}</div>
+      <h4>${c.name_np}</h4>
+      <div style="font-size:.85rem;color:#999">${c.name}</div>
+      <p>${c.description_np}</p>
+      <div class="price">रु ${c.price.toLocaleString("en-IN")}</div>
+      <button class="btn" onclick="pick(${c.id})">अर्डर · Order</button>
+    </div>`).join('');
+  document.getElementById('cake').innerHTML = cakes.map(c =>
+    `<option value="${c.id}">${c.name_np} (${c.name}) – रु ${c.price}</option>`).join('');
+}
+function pick(id){
+  document.getElementById('cake').value = id;
+  location.hash = '#order';
+}
+document.getElementById('orderForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const body = {
+    customer_name: document.getElementById('name').value,
+    phone: document.getElementById('phone').value,
+    cake_id: +document.getElementById('cake').value,
+    quantity: +document.getElementById('qty').value,
+    message: document.getElementById('message').value
+  };
+  const res = await fetch('/api/orders', {
+    method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)
+  });
+  const data = await res.json();
+  const m = document.getElementById('msg');
+  if(res.ok){ m.style.color='green'; m.textContent='✅ अर्डर सफल भयो! Order #' + data.order_id; e.target.reset(); document.getElementById('qty').value=1; }
+  else { m.style.color='red'; m.textContent='❌ ' + (data.error || 'Something went wrong'); }
+});
+loadCakes().catch(() => document.getElementById('cakes').textContent = 'Could not load cakes.');
+</script>
+</body>
+</html>

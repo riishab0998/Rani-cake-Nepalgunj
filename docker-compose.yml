@@ -1,0 +1,39 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: rani-db
+    environment:
+      POSTGRES_USER: rani
+      POSTGRES_PASSWORD: rani123
+      POSTGRES_DB: ranicake
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      - ./backend/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U rani -d ranicake"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build: ./backend
+    container_name: rani-api
+    environment:
+      DB_HOST: db
+      DB_USER: rani
+      DB_PASSWORD: rani123
+      DB_NAME: ranicake
+    depends_on:
+      db:
+        condition: service_healthy
+
+  web:
+    build: ./frontend
+    container_name: rani-web
+    ports:
+      - "8080:80"
+    depends_on:
+      - api
+
+volumes:
+  db_data:
